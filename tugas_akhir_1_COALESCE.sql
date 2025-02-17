@@ -10,7 +10,8 @@ SET buyer_username = COALESCE(
                                   (SELECT buyer_username
                                    FROM tugas_akhir_1.payment
                                    WHERE payment_id = '4'
-                                   ORDER BY effective DESC
+                                   ORDER BY effective DESC, asserted DESC -- Ensures latest update is used
+
                                    LIMIT 1), 'Unknown Buyer')
 WHERE payment_id = '4';
 
@@ -20,13 +21,18 @@ SET price = COALESCE(price,
                          (SELECT price
                           FROM tugas_akhir_1.payment
                           WHERE payment_id = '4'
-                          ORDER BY effective DESC
+                          ORDER BY effective DESC, asserted DESC
                           LIMIT 1))
 WHERE payment_id = '4';
 
 
 UPDATE tugas_akhir_1.payment
-SET effective = COALESCE(effective, now())
+SET effective = COALESCE(effective,
+                             (SELECT effective
+                              FROM tugas_akhir_1.payment
+                              WHERE payment_id = '5'
+                              ORDER BY effective DESC, asserted DESC
+                              LIMIT 1), now())
 WHERE payment_id = '5';
 
 
@@ -37,5 +43,6 @@ SELECT DISTINCT ON (payment_id) payment_id,
                    COALESCE(effective, now()) AS latest_effective_time
 FROM tugas_akhir_1.payment
 ORDER BY payment_id,
-         effective DESC;
+         effective DESC,
+         asserted DESC;
 
